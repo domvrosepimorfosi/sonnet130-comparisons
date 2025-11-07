@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shakespeare's Sonnet 130</title>
+    <!-- We'll use Tailwind for quick and responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Using Inter font as a modern default */
+        body {
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* --- Instagram Post Shell --- */
+        .instagram-post {
+            width: 100%;
+            max-width: 480px; /* Standard mobile post width */
+            border: 1px solid #dbdbdb;
+            border-radius: 8px; /* Slightly more modern rounding */
+            background-color: #fff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin: 16px;
+        }
+
+        .profile-pic {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #f0f0f0;
+        }
+
+        /* --- Carousel --- */
+        .instagram-carousel {
+            position: relative;
+            /* 1:1 Aspect Ratio */
+            width: 100%;
+            padding-top: 100%;
+            height: 0;
+            overflow: hidden;
+            background-color: #efefef;
+        }
+
+        .carousel-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            /* Smooth scrolling behavior */
+            overflow-x: scroll;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none; /* Hide scrollbar Firefox */
+            -ms-overflow-style: none; /* Hide scrollbar IE/Edge */
+        }
+
+        .carousel-wrapper::-webkit-scrollbar {
+            display: none; /* Hide scrollbar Chrome/Safari */
+        }
+
+        .carousel-slide {
+            flex: 0 0 100%;
+            width: 100%;
+            height: 100%;
+            scroll-snap-align: start;
+            position: relative;
+        }
+
+        .carousel-slide img.slide-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ensures image covers the 1:1 frame */
+        }
+
+        /* --- Watermark --- */
+        .watermark {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            width: 80px; /* Changed from 40px to 80px */
+            height: auto;
+            opacity: 0.7;
+            z-index: 10;
+            pointer-events: none; /* Make it unclickable */
+        }
+
+        /* --- Carousel Controls (Dots/Arrows) --- */
+        .carousel-controls {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+            transform: translateY(-50%);
+            pointer-events: none; /* Let clicks go through to image if needed */
+        }
+
+        .nav-btn {
+            background: rgba(0, 0, 0, 0.4);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            justify-content: center;
+            align: center;
+            pointer-events: all; /* Make buttons clickable */
+            opacity: 0.8;
+            transition: opacity 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            opacity: 1;
+        }
+
+        .dots {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 5px;
+            z-index: 10;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .dot.active {
+            background-color: #fff;
+            box-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
+        
+        /* --- Caption & Tooltip --- */
+        .caption {
+            position: relative; /* Anchor for the tooltip */
+            cursor: pointer; /* Show it's clickable */
+        }
+
+        .translation-tooltip {
+            display: none; /* Hidden by default */
+            position: absolute;
+            bottom: 100%; /* Position above the caption text */
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px); /* Centre it and add 10px gap */
+            width: 90%;
+            background-color: #333; /* Dark background */
+            color: #fff; /* White text */
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-size: 13px;
+            line-height: 1.4;
+            text-align: center;
+            z-index: 100;
+            pointer-events: none; /* Don't let tooltip interfere with clicks */
+        }
+        
+        .translation-tooltip.visible {
+            display: block;
+        }
+
+        .translation-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%; /* At the bottom of the tooltip */
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        /* --- Like Button Style --- */
+        .like-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: #262626;
+            stroke-width: 2;
+            transition: all 0.2s ease;
+        }
+        
+        .like-btn.liked svg {
+            fill: #ff3040; /* Instagram red */
+            stroke: #ff3040;
+        }
+        
+        /* --- Post Actions & Comments --- */
+        .action-btn svg {
+            width: 24px;
+            height: 24px;
+            color: #262626;
+        }
+        .action-btn.save svg {
+            margin-left: auto;
+        }
+        
+        .username {
+            font-weight: 600;
+        }
+        
+        .comment-input {
+            border: none;
+            outline: none;
+            flex-grow: 1;
+            font-size: 14px;
+            color: #8e8e8e;
+            background: transparent;
+        }
+        
+        .post-btn {
+            background: none;
+            border: none;
+            color: #0095f6;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            opacity: 0.4; /* Default disabled look */
+        }
+    </style>
+</head>
+<body class="bg-gray-50 flex flex-col justify-center items-center min-h-screen py-8"> <!-- Changed flex to flex-col and added padding -->
+
+    <!-- Audio element for background music -->
+    <audio id="bg-music" src="sound.mp3" loop></audio>
+
+    <div class="instagram-post">
+        <!-- Post Header -->
+        <div class="post-header flex items-center p-3 border-b border-gray-200">
+            <img src="0.png" alt="Profile Picture" class="profile-pic mr-3">
+            <div>
+                <div class="username text-sm">William Shakespeare</div>
+                <div class="location text-xs text-gray-500">Stratford-upon-Avon</div>
+            </div>
+            <div class="more-options ml-auto font-bold text-gray-600 cursor-pointer">...</div>
+        </div>
+        
+        <!-- Carousel -->
+        <div class="instagram-carousel">
+            <div class="carousel-wrapper">
+                <!-- Slide 1 -->
+                <div class="carousel-slide">
+                    <img src="1.png" alt="Carousel image 1" class="slide-image">
+                    <img src="pdhub-logo.png" alt="Watermark" class="watermark">
+                </div>
+                <!-- Slide 2 -->
+                <div class="carousel-slide">
+                    <img src="2.png" alt="Carousel image 2" class="slide-image">
+                    <img src="pdhub-logo.png" alt="Watermark" class="watermark">
+                </div>
+                <!-- Slide 3 -->
+                <div class="carousel-slide">
+                    <img src="3.png" alt="Carousel image 3" class="slide-image">
+                    <img src="pdhub-logo.png" alt="Watermark" class="watermark">
+                </div>
+                <!-- Slide 4 -->
+                <div class="carousel-slide">
+                    <img src="4.png" alt="Carousel image 4" class="slide-image">
+                    <img src="pdhub-logo.png" alt="Watermark" class="watermark">
+                </div>
+                <!-- Slide 5 -->
+                <div class="carousel-slide">
+                    <img src="5.png" alt="Carousel image 5" class="slide-image">
+                    <img src="pdhub-logo.png" alt="Watermark" class="watermark">
+                </div>
+                <!-- Slide 6 -->
+                <div class="carousel-slide">
+                    <img src="6.png" alt="Carousel image 6" class="slide-image">
+                    <img src="pdhub-logo.png" alt="Watermark" class="watermark">
+                </div>
+                <!-- Slide 7 -->
+                <div class="carousel-slide">
+                    <img src="7.png" alt="Carousel image 7" class="slide-image">
+                    <img src="pdhub-logo.png" alt="Watermark" class="watermark">
+                </div>
+                <!-- Slide 8 -->
+                <div class="carousel-slide">
+                    <img src="8.png" alt="Carousel image 8" class="slide-image">
+                    <img src="pdhub-logo.png" alt="Watermark" class="watermark">
+                </div>
+                <!-- Slide 9 -->
+                <div class="carousel-slide">
+                    <img src="9.png" alt="Carousel image 9" class="slide-image">
+                    <img src="pdhub-logo.png" alt="Watermark" class="watermark">
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="carousel-controls">
+                <button class="nav-btn prev-btn" style="display: none;">&#10094;</button>
+                <button class="nav-btn next-btn">&#10095;</button>
+            </div>
+            <!-- Dots -->
+            <div class="dots"></div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="post-actions flex items-center p-3 gap-4">
+            <button class="action-btn like-btn" id="like-button">
+                <!-- New Heart SVG -->
+                <svg aria-label="Like" viewBox="0 0 24 24">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+            </button>
+            <button class="action-btn">
+                <svg aria-label="Comment" fill="currentColor" viewBox="0 0 24 24"><path d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22Z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="2"></path></svg>
+            </button>
+            <button class="action-btn">
+                 <svg aria-label="Share Post" fill="currentColor" viewBox="0 0 24 24"><line fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="2" x1="22" x2="9.218" y1="3" y2="10.083"></line><polygon fill="none" points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334" stroke="currentColor" stroke-linejoin="round" stroke-width="2"></polygon></svg>
+            </button>
+            <button class="action-btn save ml-auto">
+                <svg aria-label="Save" fill="currentColor" viewBox="0 0 24 24"><polygon fill="none" points="20 21 12 13.44 4 21 4 3 20 3 20 21" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></polygon></svg>
+            </button>
+        </div>
+        
+        <!-- Likes & Caption -->
+        <div class="post-info px-4 pb-3 text-sm">
+            <div class="likes font-semibold">1,588 likes</div>
+            <div class="caption mt-2" id="caption-container"> <!-- Added ID -->
+                <span class="username">William Shakespeare</span>
+                <!-- This text will be updated by JavaScript -->
+                <span id="dynamic-caption-text"></span>
+                
+                <!-- The Tooltip -->
+                <div id="translation-tooltip" class="translation-tooltip">
+                    <!-- Translation will be inserted here -->
+                </div>
+            </div>
+            <div class="view-comments text-gray-500 mt-2 cursor-pointer">View all 99 comments</div>
+        </div>
+
+        <!-- Add Comment -->
+        <div class="add-comment flex items-center px-4 py-2 border-t border-gray-200">
+            <img src="pdhub-logo.png" alt="My Profile Pic" class="profile-pic w-6 h-6 mr-3">
+            <input type="text" class="comment-input" placeholder="Add a comment...">
+            <button class="post-btn">Post</button>
+        </div>
+
+    </div>
+
+    <!-- New Footer -->
+    <footer class="text-center text-gray-600 text-sm mt-8 px-4">
+        ✨✍️ Created by PanagGiotis Domvros, English and Drama Teacher, All Rights Reserved ✍️✨
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const carouselWrapper = document.querySelector('.carousel-wrapper');
+            const slides = document.querySelectorAll('.carousel-slide');
+            const numSlides = slides.length;
+            const prevButton = document.querySelector('.prev-btn');
+            const nextButton = document.querySelector('.next-btn');
+            const dotsContainer = document.querySelector('.dots');
+            const captionElement = document.getElementById('dynamic-caption-text');
+            const captionContainer = document.getElementById('caption-container');
+            const tooltip = document.getElementById('translation-tooltip');
+            
+            // --- Audio ---
+            const audio = document.getElementById('bg-music');
+            let hasInteracted = false;
+            let audioStopTimer = null;
+            audio.volume = 0.2; // Play softly
+
+            let currentSlideIndex = 0;
+            
+            // Sonnet lines for each slide
+            const captions = [
+                "My mistress’ eyes are nothing like the sun;", // Image 1
+                "Coral is far more red than her lips’ red;", // Image 2
+                "If snow be white, why then her breasts are dun;", // Image 3
+                "If hairs be wires, black wires grow on her head.", // Image 4
+                "I have seen roses damasked, red and white, / But no such roses see I in her cheeks;", // Image 5
+                "And in some perfumes is there more delight / Than in the breath that from my mistress reeks.", // Image 6
+                "I love to hear her speak, yet well I know / That music hath a far more pleasing sound;", // Image 7
+                "I grant I never saw a goddess go; / My mistress when she walks treads on the ground.", // Image 8
+                "And yet, by heaven, I think my love as rare / As any she belied with false compare." // Image 9
+            ];
+
+            // Modern translations
+            const translations = [
+                "My lover's eyes aren't bright like the sun;", // Image 1
+                "Coral is much redder than her red lips;", // Image 2
+                "If snow is white, then her breasts are a dull brownish-grey;", // Image 3
+                "If hair can be like wires, then black wires grow on her head.", // Image 4
+                "I've seen multi-coloured roses, red and white, <br> But I don't see those colours in her cheeks;", // Image 5
+                "And some perfumes smell more delightful <br> Than my lover's bad breath.", // Image 6
+                "I love to hear her speak, but I know full well <br> That music has a much more pleasing sound;", // Image 7
+                "I'll admit I've never seen a goddess move; <br> My lover, when she walks, just walks on the ground.", // Image 8
+                "And yet, I swear, I think my love is as special <br> As any woman who is lied about with false comparisons." // Image 9
+            ];
+
+            // --- Audio Functions ---
+            function playMusic() {
+                if (hasInteracted && audio.paused) {
+                    audio.play().catch(e => console.error("Audio play failed:", e));
+                }
+            }
+
+            function stopMusic() {
+                if (!audio.paused) {
+                    audio.pause();
+                }
+            }
+
+            // --- First Interaction Handler ---
+            function handleFirstInteraction() {
+                if (hasInteracted) return;
+                hasInteracted = true;
+                playMusic();
+                // Remove listeners after first interaction
+                document.removeEventListener('click', handleFirstInteraction);
+                document.removeEventListener('scroll', handleFirstInteraction);
+                document.removeEventListener('touchstart', handleFirstInteraction);
+            }
+            
+            // Listen for first interaction to start music (for browser autoplay policy)
+            document.addEventListener('click', handleFirstInteraction);
+            document.addEventListener('scroll', handleFirstInteraction, true); // Use capture for scroll
+            document.addEventListener('touchstart', handleFirstInteraction);
+
+
+            if (numSlides > 0) {
+                // Create dots
+                for (let i = 0; i < numSlides; i++) {
+                    const dot = document.createElement('div');
+                    dot.classList.add('dot');
+                    if (i === 0) dot.classList.add('active');
+                    dot.addEventListener('click', () => {
+                        goToSlide(i);
+                    });
+                    dotsContainer.appendChild(dot);
+                }
+                const dots = document.querySelectorAll('.dot');
+                
+                // Function to update carousel state (scroll, dots, buttons, caption, audio)
+                function updateCarousel() {
+                    const carouselWidth = carouselWrapper.offsetWidth;
+                    // Scroll the wrapper
+                    carouselWrapper.scroll({
+                        left: currentSlideIndex * carouselWidth,
+                        behavior: 'smooth'
+                    });
+
+                    // Update dots
+                    dots.forEach((dot, index) => {
+                        dot.classList.toggle('active', index === currentSlideIndex);
+                    });
+                    
+                    // Update nav buttons visibility
+                    prevButton.style.display = currentSlideIndex === 0 ? 'none' : 'flex';
+                    nextButton.style.display = currentSlideIndex === numSlides - 1 ? 'none' : 'flex';
+
+                    // Update caption text, replacing '/' with a line break
+                    captionElement.innerHTML = captions[currentSlideIndex].replace(' /', '<br>');
+                    
+                    // Hide tooltip whenever slide changes
+                    tooltip.classList.remove('visible');
+
+                    // --- Audio Logic ---
+                    // Clear any existing stop timer
+                    if (audioStopTimer) {
+                        clearTimeout(audioStopTimer);
+                        audioStopTimer = null;
+                    }
+                    
+                    if (currentSlideIndex === numSlides - 1) {
+                        // If on the last slide, set a timer to stop music
+                        audioStopTimer = setTimeout(() => {
+                            stopMusic();
+                        }, 3000); // 3 seconds
+                    } else {
+                        // If not on the last slide, make sure music is playing
+                        playMusic();
+                    }
+                }
+
+                function goToSlide(slideIndex) {
+                    currentSlideIndex = slideIndex;
+                    updateCarousel();
+                }
+
+                // --- Button Controls ---
+                nextButton.addEventListener('click', () => {
+                    handleFirstInteraction(); // Ensure interaction
+                    if (currentSlideIndex < numSlides - 1) {
+                        currentSlideIndex++;
+                        updateCarousel();
+                    }
+                });
+
+                prevButton.addEventListener('click', () => {
+                    handleFirstInteraction(); // Ensure interaction
+                    if (currentSlideIndex > 0) {
+                        currentSlideIndex--;
+                        updateCarousel();
+                    }
+                });
+                
+                // --- Manual Scroll/Swipe Detection ---
+                let scrollTimeout;
+                carouselWrapper.addEventListener('scroll', () => {
+                    handleFirstInteraction(); // Ensure interaction
+                    
+                    clearTimeout(scrollTimeout);
+                    scrollTimeout = setTimeout(() => {
+                        const carouselWidth = carouselWrapper.offsetWidth;
+                        const newIndex = Math.round(carouselWrapper.scrollLeft / carouselWidth);
+                        
+                        if (newIndex !== currentSlideIndex) {
+                            currentSlideIndex = newIndex;
+                            // Call updateCarousel to sync dots, buttons, caption, and audio
+                            updateCarousel();
+                        }
+                    }, 150); // A short delay to wait for scroll to settle
+                });
+
+                // --- Toggle Translation Tooltip ---
+                captionContainer.addEventListener('click', (event) => {
+                    event.stopPropagation(); // Prevent click from bubbling to document
+                    
+                    // Check if it's already visible
+                    if (tooltip.classList.contains('visible')) {
+                        tooltip.classList.remove('visible');
+                    } else {
+                        // Get current translation
+                        tooltip.innerHTML = translations[currentSlideIndex];
+                        // Show tooltip
+                        tooltip.classList.add('visible');
+                    }
+                });
+
+                // --- Hide tooltip when clicking anywhere else ---
+                document.addEventListener('click', () => {
+                    if (tooltip.classList.contains('visible')) {
+                        tooltip.classList.remove('visible');
+                    }
+                });
+
+                // Initialize first slide's caption and state
+                updateCarousel();
+
+                // --- Like Button Toggle ---
+                const likeButton = document.getElementById('like-button');
+                likeButton.addEventListener('click', () => {
+                    likeButton.classList.toggle('liked');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
